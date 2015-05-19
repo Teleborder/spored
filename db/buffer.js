@@ -30,12 +30,6 @@ exports.retrieveNext = function (callback) {
   }, callback);
 };
 
-exports.find = function (id, callback) {
-  requests.findOne({
-    _id: id
-  }, callback);
-};
-
 function tryNext(retries, lastAttempt) {
   var nextAttempt = new Date();
   nextAttempt.setTime(lastAttempt.getTime() + expBackoff(retries));

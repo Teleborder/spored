@@ -44,27 +44,22 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
     return passThrough(req, res, next);
   }
 
-  buffer.store(req.method, req.originalUrl, req.headers, req.body, function (err, buf) {
-    if(err) return next(err);
+  sendRequest(req, function (err, response, body) {
+    if(err) {
 
-    sendRequest(req, function (err, response, body) {
-      if(err) {
-        // error while connecting, keep the buffer
-        // tell the client where they can monitor it
-        // and how long they should wait before trying again
-        res.set('Location', '/__buffered/' + buf._id);
-        res.set('Retry-After', buf.tryNextAt);
-        res.sendStatus(202);
-        return;
-      }
-
-      // request was successful, remove our stored one
-      buffer.remove(bufId, function (err) {
+      debug("Error while connecting to remote, will attempt request later");
+      buffer.store(req.method, req.originalUrl, req.headers, req.body, function (err, buf) {
         if(err) return next(err);
 
-        sendResponse(res, response, body);
+        debug("Request saved for a later time, notifying client");
+        res.sendStatus(202);
+        return;
       });
-    });
+    }
+
+    debug("Request successful, sending to client");
+
+    sendResponse(res, response, body);
   });
 };
 
