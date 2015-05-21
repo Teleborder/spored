@@ -8,7 +8,7 @@ exports.find = function (url, callback) {
     method: 'GET',
     url: url,
     expires: {
-      $lt: new Date()
+      $gt: new Date()
     }
   }).sort({ fulfilledAt: 1 }).limit(1).exec(function (err, responses) {
     if(err) return callback(err);
@@ -16,7 +16,7 @@ exports.find = function (url, callback) {
     var response = responses[0];
 
     if(response && response.statusCode && response.headers && response.body) {
-      return callback(null, { statusCode: response.statusCode, headers: response.headers }, repsonse.body);
+      return callback(null, { statusCode: response.statusCode, headers: response.headers }, response.body);
     }
 
     callback();

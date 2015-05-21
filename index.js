@@ -3,7 +3,8 @@ var express = require('express'),
     config = require('./config'),
     bodyParser = require('body-parser'),
     routes = require('./routes'),
-    retry = require('./retry');
+    retry = require('./retry'),
+    prune = require('./prune');
 
 app.use(bodyParser.raw());
 
@@ -30,3 +31,4 @@ var server = app.listen(config.port, function () {
 });
 
 retry.start();
+prune(60);

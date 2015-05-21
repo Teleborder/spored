@@ -18,7 +18,7 @@ exports.get = function (req, res, next) {
     if(err) return next(err);
     if(response) {
       debug("Cached copy of of " + req.originalUrl + " found, sending.");
-      return proxy.sendResponse(response, body);
+      return proxy.sendResponse(res, response, body);
     }
 
     debug("No cache of " + req.originalUrl + " found, requesting from remote.");
