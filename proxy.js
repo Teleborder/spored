@@ -104,5 +104,5 @@ function headerValues(headers, name) {
 }
 
 function fullUrl(url) {
-  return config.remoteHost + url;
+  return config.host + url;
 }
