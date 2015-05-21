@@ -1,4 +1,5 @@
-var buffer = require('./db/buffer');
+var buffer = require('./db/buffer'),
+    proxy = require('./proxy');
 
 module.exports = Retry;
 
@@ -69,7 +70,7 @@ Retry.prototype.next = function () {
       return ;
     }
 
-    sendRequest({
+    proxy.sendRequestImmediate({
       originalUrl: request.url,
       method: request.method,
       body: request.body,
@@ -79,6 +80,8 @@ Retry.prototype.next = function () {
         self.log("Network error (" + err.message + ") encountered when retrying " + request.url + ", backing off.");
         self.backoff(err);
       }
+
+      self.log(request.url + " completed, removing from the buffer");
 
       buffer.remove(request._id, function (err) {
         if(err) return self.error(err);
