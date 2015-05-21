@@ -50,7 +50,7 @@ exports.get = function (req, res, next) {
 exports.post = exports.put = exports.patch = exports.delete = function (req, res, next) {
   debug(req.method + " handler for " + req.originalUrl);
 
-  if(!proxy.noBuffer(req.headers)) {
+  if(proxy.noBuffer(req.headers)) {
     debug("Client does not want to accept async responses for " + req.method + " " + req.originalUrl + ", forwarding.");
 
     return proxy.passThrough(req, res, next);
@@ -60,10 +60,27 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
   buffer.store(req.method, req.originalUrl, req.headers, req.body, function (err, buf) {
     if(err) return next(err);
 
-    debug("Request saved for later, starting queue and notifying client");
+    debug("Request saved for later");
 
-    retry.now();
+    var postCache = proxy.postCache(req);
 
-    res.sendStatus(202);
+    if(!postCache) return respondAsync(res);
+
+    debug("This is a response that we can cache as a GET request");
+    cache.store(postCache.url, postCache, proxy.maxAge(), function (err) {
+      if(err) return next(err);
+
+      respondAsync(res);
+    });
   });
 };
+
+function respondAsync(res) {
+  debug("starting queue");
+
+  retry.now();
+
+  debug("notifying client");
+
+  res.sendStatus(202);
+}

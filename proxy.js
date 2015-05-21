@@ -55,6 +55,45 @@ function sendRequestImmediate(req, callback) {
   });
 }
 
+// check whether a request should be cached as a GET request,
+// and get the contents of a fake GET request
+exports.postCache = postCache;
+function postCache(req) {
+  if(req.method.toUpperCase() !== 'POST') {
+    return false;
+  }
+
+  if(!Buffer.isBuffer(req.body)) {
+    return false;
+  }
+
+  var body,
+      url;
+
+  try {
+    body = JSON.parse(req.body.toString('utf8'));
+  } catch(e) {
+    return false;
+  }
+
+  if(!body.id) {
+    return false;
+  }
+
+  url = req.originalUrl + '/' + body.id;
+
+  return {
+    method: 'GET',
+    url: url,
+    body: req.body,
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      Connection: 'keep-alive'
+    }
+  };
+}
+
 exports.noCache = noCache;
 function noCache(headers) {
   return headerHasValue(headers, 'pragma', 'no-cache') || headerHasValue(headers, 'cache-control', 'no-cache');
@@ -67,6 +106,11 @@ function noBuffer(headers) {
 
 exports.maxAge = maxAge;
 function maxAge(headers) {
+  if(!headers) {
+    debug("No headers given, returning maximum maxAge of 1 year");
+    return 31536000;
+  }
+
   if(headers['cache-control']) {
 
     var cacheControls = headerValues(headers, 'cache-control');
@@ -79,8 +123,8 @@ function maxAge(headers) {
     }
   }
 
-  if(headers['expires']) {
-    var expires = new Date(headers['expires']),
+  if(headers.expires) {
+    var expires = new Date(headers.expires),
         now = new Date();
 
     debug("expires directive found");
