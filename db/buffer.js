@@ -24,7 +24,7 @@ exports.remove = function (id, callback) {
 };
 
 exports.retrieveNext = function (callback) {
-  buffer.find({}).sort({ createdAt: -1 }).limit(1).exec(function (err, docs) {
+  buffer.find({}).sort({ createdAt: 1 }).limit(1).exec(function (err, docs) {
     if(err) return callback(err);
     if(!docs[0]) return callback();
 

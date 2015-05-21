@@ -81,8 +81,8 @@ Retry.prototype.next = function () {
       headers: request.headers
     }, function (err, response, body) {
       if(err) {
-        self.log("Network error (" + err.message + ") encountered when retrying " + request.url + ", backing off.");
-        self.backoff(err);
+        self.log("Network error (" + err.message + ") encountered when retrying " + request.method + " " + request.url + ", backing off.");
+        return self.backoff(err);
       }
 
       self.log(request.url + " completed, removing from the buffer");

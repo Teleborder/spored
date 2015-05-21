@@ -1,6 +1,7 @@
 var config = require('./config'),
     debug = require('./debug'),
     request = require('request'),
+    parseBody = require('qs').parse,
     retry = require('./retry').retry;
 
 exports.passThrough = passThrough;
@@ -49,7 +50,7 @@ function sendRequestImmediate(req, callback) {
     encoding: null,
     headers: headers
   }, function (err, response, body) {
-    if(err) return next(err);
+    if(err) return callback(err);
 
     callback(null, response, body);
   });
@@ -59,33 +60,47 @@ function sendRequestImmediate(req, callback) {
 // and get the contents of a fake GET request
 exports.postCache = postCache;
 function postCache(req) {
+  var body,
+      url,
+      type,
+      json = {};
+
+  debug("Checking " + req.method + " " + req.originalUrl + " for cacheability");
+
   if(req.method.toUpperCase() !== 'POST') {
+    debug("not a POST request, so not a create");
     return false;
   }
 
   if(!Buffer.isBuffer(req.body)) {
+    debug("Body isn't a buffer, assume it's empty");
     return false;
   }
 
-  var body,
-      url;
-
   try {
-    body = JSON.parse(req.body.toString('utf8'));
+    body = parseBody(req.body.toString());
   } catch(e) {
+    debug("Body isn't a valid url encoded string");
     return false;
   }
 
   if(!body.id) {
+    debug("No body id, so no way to build a url");
     return false;
   }
 
+  // e.g. /apps -> 'app'
+  type = singularize(req.originalUrl.split('/').pop());
   url = req.originalUrl + '/' + body.id;
+
+  debug("Setting body as a JSON child of " + type);
+
+  json[type] = body;
 
   return {
     method: 'GET',
     url: url,
-    body: req.body,
+    body: new Buffer(JSON.stringify(json)),
     statusCode: 200,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
@@ -136,9 +151,14 @@ function maxAge(headers) {
 }
 
 function headerHasValue(headers, name, value) {
-  headerValues(headers, name).some(function (val) {
-    return val === value;
-  });
+  var values = headerValues(headers, name);
+
+  for(var i=0; i<values.length; i++) {
+    if(values[i] === value) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function headerValues(headers, name) {
@@ -151,4 +171,11 @@ function headerValues(headers, name) {
 
 function fullUrl(url) {
   return config.host + url;
+}
+
+function singularize(word) {
+  if(word.slice(-1).toLowerCase() === 's') {
+    return word.slice(0, -1);
+  }
+  return word;
 }

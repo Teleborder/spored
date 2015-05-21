@@ -18,6 +18,7 @@ exports.get = function (req, res, next) {
     if(err) return next(err);
     if(response) {
       debug("Cached copy of of " + req.originalUrl + " found, sending.");
+      console.log("Body", body.toString());
       return proxy.sendResponse(res, response, body);
     }
 
@@ -64,11 +65,16 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
 
     var postCache = proxy.postCache(req);
 
-    if(!postCache) return respondAsync(res);
+    if(!postCache) {
+      debug(req.method + " " + req.originalUrl + " is not a request we can cache as a GET, returning.");
+      return respondAsync(res);
+    }
 
     debug("This is a response that we can cache as a GET request");
-    cache.store(postCache.url, postCache, proxy.maxAge(), function (err) {
+    cache.store(postCache.url, postCache, postCache.body, proxy.maxAge(), function (err) {
       if(err) return next(err);
+
+      debug("POST cache saved, returning to the client");
 
       respondAsync(res);
     });
