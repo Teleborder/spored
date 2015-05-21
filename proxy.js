@@ -1,68 +1,8 @@
-var cache = require('./db/cache'),
-    buffer = require('./db/buffer'),
-    config = require('./config'),
-    debug = require('./debug');
+var config = require('./config'),
+    debug = require('./debug'),
+    request = require('request');
 
-exports.get = function (req, res, next) {
-
-  if(noCache(req.headers)) {
-    debug("Client is requesting that we not use a cached request for " + req.originalUrl + ", forwarding.");
-    
-    return passThrough(req, res, next);
-  }
-
-  cache.find(req.originalUrl, function (err, response, body) {
-    if(err) return next(err);
-    if(response) {
-      debug("Cached copy of of " + req.originalUrl + " found, sending.");
-      return sendResponse(response, body);
-    }
-
-    sendRequest(req, function (err, response, body) {
-      if(err) return next(err);
-
-      if(noCache(response.headers)) {
-        debug("Server is requesting that we not cache " + req.originalUrl + ", forwarding.");
-        return sendResponse(response, body);
-      }
-
-      debug("Storing a cached copy of " + req.originalUrl + " for future requests.");
-
-      cache.store(req.originalUrl, response, body, maxAge(response.headers), function (err) {
-        if(err) return next(err);
-
-        sendResponse(response, body);
-      });
-    });
-  });
-};
-
-exports.post = exports.put = exports.patch = exports.delete = function (req, res, next) {
-  if(!noBuffer(req.headers)) {
-    debug("Client does not want to accept async responses for " + req.method + " " + req.originalUrl + ", forwarding.");
-
-    return passThrough(req, res, next);
-  }
-
-  sendRequest(req, function (err, response, body) {
-    if(err) {
-
-      debug("Error while connecting to remote, will attempt request later");
-      buffer.store(req.method, req.originalUrl, req.headers, req.body, function (err, buf) {
-        if(err) return next(err);
-
-        debug("Request saved for a later time, notifying client");
-        res.sendStatus(202);
-        return;
-      });
-    }
-
-    debug("Request successful, sending to client");
-
-    sendResponse(res, response, body);
-  });
-};
-
+exports.passThrough = passThrough;
 function passThrough (req, res, next) {
   sendRequest(req, function (err, response, body) {
     if(err) return next(err);
@@ -71,6 +11,7 @@ function passThrough (req, res, next) {
   });
 }
 
+exports.sendResponse = sendResponse;
 function sendResponse(res, response, body) {
   res.set(response.headers);
 
@@ -80,14 +21,24 @@ function sendResponse(res, response, body) {
   res.status(response.statusCode).send(body);
 }
 
+exports.sendRequest = sendRequest;
 function sendRequest(req, callback) {
+  retry.now(function (err) {
+    if(err) return callback(err);
+
+    sendRequest(req, callback);
+  });
+}
+
+exports.sendRequestImmediate = sendRequestImmediate;
+function sendRequestImmediate(req, callback) {
   var headers = req.headers;
 
   // Add our proxy info
-  if(!headers['via']) {
-    headers['via'] = config.proxyName;
+  if(!headers.via) {
+    headers.via = config.proxyName;
   } else {
-    headers['via'] += ", " + config.proxyName;
+    headers.via += ", " + config.proxyName;
   }
 
   request({
@@ -95,17 +46,24 @@ function sendRequest(req, callback) {
     method: req.method,
     body: req.body,
     headers: headers
-  }, callback);
+  }, function (err, response, body) {
+    if(err) return next(err);
+
+    callback(null, response, body);
+  });
 }
 
+exports.noCache = noCache;
 function noCache(headers) {
   return headerHasValue(headers, 'pragma', 'no-cache') || headerHasValue(headers, 'cache-control', 'no-cache');
 }
 
+exports.noBuffer = noBuffer;
 function noBuffer(headers) {
   return !headerHasValue(headers, 'prefer', 'respond-async');
 }
 
+exports.maxAge = maxAge;
 function maxAge(headers) {
   if(headers['cache-control']) {
 

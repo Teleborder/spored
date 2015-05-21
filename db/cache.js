@@ -1,6 +1,6 @@
 var Datastore = require('nedb'),
-    config = require('./config'),
-    debug = require('./debug'),
+    config = require('../config'),
+    debug = require('../debug'),
     cache = new Datastore({ filename: config.cachePath, autoload: true });
 
 exports.find = function (url, callback) {

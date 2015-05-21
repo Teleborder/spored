@@ -6,5 +6,6 @@ exports.bufferPath = resolvePath(exports.dbPath, 'buffer.db');
 exports.cachePath = resolvePath(exports.dbPath, 'cache.db');
 exports.port = process.env.PORT || 3768;
 exports.remoteHost = 'http://spore.dev:3000';
-config.proxyName = [pkg.name, pkg.version].join(" ");
+exports.proxyName = [pkg.name, pkg.version].join(" ");
+exports.timer = 30;
 

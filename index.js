@@ -2,15 +2,15 @@ var express = require('express'),
     app = express(),
     config = require('./config'),
     bodyParser = require('body-parser'),
-    proxy = require('./proxy');
+    routes = require('./routes');
 
 app.use(bodyParser.raw());
 
-app.get('*', proxy.get);
-app.post('*', proxy.post);
-app.put('*', proxy.put);
-app.patch('*', proxy.patch);
-app.delete('*', proxy.delete);
+app.get('*', routes.get);
+app.post('*', routes.post);
+app.put('*', routes.put);
+app.patch('*', routes.patch);
+app.delete('*', routes.delete);
 
 var server = app.listen(config.port, function () {
   var host = server.address().address;
@@ -18,3 +18,5 @@ var server = app.listen(config.port, function () {
 
   console.log('spored listening at http://%s:%s', host, port);
 });
+
+routes.retry.start();
