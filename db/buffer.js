@@ -11,17 +11,17 @@ exports.store = function (method, url, headers, body, callback) {
     createdAt: new Date()
   };
 
-  requests.insert(request, callback);
+  buffer.insert(request, callback);
 };
 
 exports.remove = function (id, callback) {
-  requests.remove({
+  buffer.remove({
     _id: id
   }, callback);
 };
 
 exports.retrieveNext = function (callback) {
-  requests.find({}).sort({ createdAt: -1 }).limit(1).exec(function (err, docs) {
+  buffer.find({}).sort({ createdAt: -1 }).limit(1).exec(function (err, docs) {
     if(err) return callback(err);
     callback(null, docs[0]);
   });

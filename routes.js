@@ -1,12 +1,12 @@
 var cache = require('./db/cache'),
     buffer = require('./db/buffer'),
     proxy = require('./proxy'),
-    Retry = require('./retry'),
+    retry = require('./retry').retry,
     debug = require('./debug');
 
-var retry = exports.retry = new Retry();
-
 exports.get = function (req, res, next) {
+
+  debug("get handler for request " + req.originalUrl);
 
   if(proxy.noCache(req.headers)) {
     debug("Client is requesting that we not use a cached request for " + req.originalUrl + ", forwarding.");
@@ -21,17 +21,19 @@ exports.get = function (req, res, next) {
       return proxy.sendResponse(response, body);
     }
 
+    debug("No cache of " + req.originalUrl + " found, requesting from remote.");
+
     proxy.sendRequest(req, function (err, response, body) {
       if(err) return next(err);
 
       if(proxy.noCache(response.headers)) {
         debug("Server is requesting that we not cache " + req.originalUrl + ", forwarding.");
-        return proxy.sendResponse(response, body);
+        return proxy.sendResponse(res, response, body);
       }
 
       if(response.statusCode !== 200) {
         debug("Server responded with " + response.statusCode + " which is a not a cache-able 200");
-        return proxy.sendResponse(response, body);
+        return proxy.sendResponse(res, response, body);
       }
 
       debug("Storing a cached copy of " + req.originalUrl + " for future requests.");
@@ -39,13 +41,15 @@ exports.get = function (req, res, next) {
       cache.store(req.originalUrl, response, body, proxy.maxAge(response.headers), function (err) {
         if(err) return next(err);
 
-        proxy.sendResponse(response, body);
+        proxy.sendResponse(res, response, body);
       });
     });
   });
 };
 
 exports.post = exports.put = exports.patch = exports.delete = function (req, res, next) {
+  debug(req.method + " handler for " + req.originalUrl);
+
   if(!proxy.noBuffer(req.headers)) {
     debug("Client does not want to accept async responses for " + req.method + " " + req.originalUrl + ", forwarding.");
 

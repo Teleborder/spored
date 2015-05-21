@@ -10,12 +10,12 @@ exports.find = function (url, callback) {
     expires: {
       $lt: new Date()
     }
-  }).sort({ fulfilledAt: 1 }).exec(function (err, responses) {
+  }).sort({ fulfilledAt: 1 }).limit(1).exec(function (err, responses) {
     if(err) return callback(err);
 
     var response = responses[0];
 
-    if(response.statusCode && response.headers && response.body) {
+    if(response && response.statusCode && response.headers && response.body) {
       return callback(null, { statusCode: response.statusCode, headers: response.headers }, repsonse.body);
     }
 

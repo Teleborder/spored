@@ -16,15 +16,17 @@ try {
 }
 
 config = config || {};
-config.spored = config.spored || {};
+config.spored = config.proxy || {};
 
-exports.sporedPath = resolvePath(config.spored.home || home + '/spored');
+exports.proxyPath = resolvePath(config.proxy.home || home + '/spored');
 
-fs.ensureDirSync(exports.sporedPath);
+fs.ensureDirSync(exports.proxyPath);
 
-exports.bufferPath = resolvePath(exports.sporedPath, 'buffer.db');
-exports.cachePath = resolvePath(exports.sporedPath, 'cache.db');
-exports.port = config.spored.port || 8380;
-exports.host = config.spored.remote || "http://spore.dev:3000";
-exports.name = config.spored.name || [pkg.name, pkg.version].join(" ");
+exports.bufferPath = resolvePath(exports.proxyPath, 'buffer.db');
+exports.cachePath = resolvePath(exports.proxyPath, 'cache.db');
+exports.port = config.proxy.port || 8380;
+exports.host = config.host || "http://spore.dev:3000";
+exports.name = config.proxy.name || [pkg.name, pkg.version].join(" ");
+exports.errorLog = config.proxy.errorFile || resolvePath(home, '~/.spore/spored/errors.log');
+exports.log = config.proxy.logFile || resolvePath(home, '~/.spore/spored/log.log');
 

@@ -6,12 +6,6 @@ function Retry() {
   this.queue = [];
 }
 
-Retry.start = function () {
-  var r = new Retry();
-  r.start();
-  return r;
-};
-
 Retry.prototype.now = function (callback) {
   if(callback) {
     this.queue.push(callback);
@@ -114,3 +108,8 @@ function expBackoff(retries) {
 
   return Math.min(spread * initial * Math.pow(base, retries));
 }
+
+var retry = new Retry();
+
+Retry.retry = retry;
+Retry.start = retry.start.bind(retry);

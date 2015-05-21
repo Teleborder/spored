@@ -1,6 +1,7 @@
 var config = require('./config'),
     debug = require('./debug'),
-    request = require('request');
+    request = require('request'),
+    retry = require('./retry').retry;
 
 exports.passThrough = passThrough;
 function passThrough (req, res, next) {
@@ -26,7 +27,7 @@ function sendRequest(req, callback) {
   retry.now(function (err) {
     if(err) return callback(err);
 
-    sendRequest(req, callback);
+    sendRequestImmediate(req, callback);
   });
 }
 
@@ -44,7 +45,7 @@ function sendRequestImmediate(req, callback) {
   request({
     url: fullUrl(req.originalUrl),
     method: req.method,
-    body: req.body,
+    body: Buffer.isBuffer(req.body) ? req.body : undefined,
     headers: headers
   }, function (err, response, body) {
     if(err) return next(err);
