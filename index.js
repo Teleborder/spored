@@ -6,7 +6,9 @@ var express = require('express'),
     retry = require('./retry'),
     prune = require('./prune');
 
-app.use(bodyParser.raw());
+app.use(bodyParser.raw({
+  type: '*/*'
+}));
 
 app.use(function (req, res, next) {
   console.log(req.method + " " + req.originalUrl);

@@ -62,7 +62,7 @@ Retry.prototype.retry = function () {
 Retry.prototype.next = function () {
   var self = this;
 
-  buffer.retrieveNext(function (err, request) {
+  buffer.retrieveNext(function (err, request, body) {
     if(err) return self.error(err);
     if(!request) {
       self.log("No requests found to retry");
@@ -70,10 +70,14 @@ Retry.prototype.next = function () {
       return ;
     }
 
+    self.log("Sending request: " + request.method + " " + request.url);
+    self.log(request.headers);
+    self.log(body ? body.toString('utf8') : undefined);
+
     proxy.sendRequestImmediate({
       originalUrl: request.url,
       method: request.method,
-      body: request.body,
+      body: body,
       headers: request.headers
     }, function (err, response, body) {
       if(err) {
@@ -82,6 +86,10 @@ Retry.prototype.next = function () {
       }
 
       self.log(request.url + " completed, removing from the buffer");
+      self.log("Response to " + request.method + " " + request.url);
+      self.log(response.statusCode);
+      self.log(response.headers);
+      self.log(body ? body.toString('utf8') : undefined);
 
       buffer.remove(request._id, function (err) {
         if(err) return self.error(err);

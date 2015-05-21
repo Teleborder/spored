@@ -15,8 +15,8 @@ exports.find = function (url, callback) {
 
     var response = responses[0];
 
-    if(response && response.statusCode && response.headers && response.body) {
-      return callback(null, { statusCode: response.statusCode, headers: response.headers }, response.body);
+    if(response) {
+      return callback(null, { statusCode: response.statusCode, headers: response.headers }, new Buffer(response.body, 'base64'));
     }
 
     callback();
@@ -32,7 +32,7 @@ exports.store = function (url, response, body, maxAge, callback) {
   var request = {
     method: 'GET',
     url: url,
-    body: body,
+    body: Buffer.isBuffer(body) ? body.toString('base64') : undefined,
     statusCode: response.statusCode,
     headers: response.headers,
     fulfilledAt: now,

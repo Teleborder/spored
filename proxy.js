@@ -46,6 +46,7 @@ function sendRequestImmediate(req, callback) {
     url: fullUrl(req.originalUrl),
     method: req.method,
     body: Buffer.isBuffer(req.body) ? req.body : undefined,
+    encoding: null,
     headers: headers
   }, function (err, response, body) {
     if(err) return next(err);
