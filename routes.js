@@ -49,7 +49,7 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
   var cache = this.spored.cache,
       buffer = this.spored.buffer,
       proxy = this.spored.proxy,
-      respondAsync = this.respondAsync;
+      respondAsync = this.respondAsync.bind(this);
 
   debug(req.method + " handler for " + req.originalUrl);
 
