@@ -8,6 +8,8 @@ function Retry() {
 }
 
 Retry.prototype.now = function (callback) {
+  this.log("starting queue now");
+
   if(callback) {
     this.queue.push(callback);
   }
@@ -21,6 +23,8 @@ Retry.prototype.now = function (callback) {
 };
 
 Retry.prototype.done = function () {
+  this.log("retried requests complete");
+
   if(this.timer) {
     clearTimeout(this.timer);
   }
@@ -39,6 +43,8 @@ Retry.prototype.finishQueue = function (args) {
 };
 
 Retry.prototype.start = function () {
+  this.log("Starting retry timer");
+
   this.retries = 0;
   this.backoff();
 };
@@ -47,14 +53,15 @@ Retry.prototype.backoff = function (err) {
   this.timer = setTimeout(this.retry.bind(this), expBackoff(this.retries) * 1000);
 
   if(err) {
+    debug("backoff Err, err'ing the queue");
     this.finishQueue(err);
   }
 };
 
 Retry.prototype.retry = function () {
-  var self = this;
-
   this.retries++;
+
+  this.log("Retrying again (#" + this.retries + ")");
 
   this.next();
 };
@@ -70,44 +77,66 @@ Retry.prototype.next = function () {
       return ;
     }
 
-    self.log("Sending request: " + request.method + " " + request.url);
-    self.log(request.headers);
-    self.log(body ? body.toString('utf8') : undefined);
+    self.log("Found " + [request.method, request.url].join(" ") + "(id: " + request._id + ") to retry");
 
     proxy.sendRequestImmediate({
       originalUrl: request.url,
       method: request.method,
       body: body,
       headers: request.headers
-    }, function (err, response, body) {
-      if(err) {
-        self.log("Network error (" + err.message + ") encountered when retrying " + request.method + " " + request.url + ", backing off.");
-        return self.backoff(err);
-      }
-
-      self.log(request.url + " completed, removing from the buffer");
-      self.log("Response to " + request.method + " " + request.url);
-      self.log(response.statusCode);
-      self.log(response.headers);
-      self.log(body ? body.toString('utf8') : undefined);
-
-      buffer.remove(request._id, function (err) {
-        if(err) return self.error(err);
-
-        self.next();
-      });
-    });
+    }, self._handleResponse(request));
   });
 };
 
+Retry.prototype._handleResponse = function (request) {
+  var self = this;
+
+  return function (err, response, body) {
+    if(err) {
+      self.log("Network error (" + err.message + ") encountered when retrying " + request.method + " " + request.url + ", backing off.");
+      return self.backoff(err);
+    }
+
+    self.log(request.method + " " + request.url + " completed with status code " + response.statusCode);
+
+    self._responseError(request, response);
+
+    self.log("Removing " + request.method + " " + request.url + " from the buffer");
+
+    buffer.remove(request._id, function (err) {
+      if(err) return self.error(err);
+
+      self.next();
+    });
+  };
+};
+
+Retry.prototype._responseError = function (request, response) {
+  if([200, 201, 204].indexOf(response.statusCode) === -1) {
+    this.error("Status code " + response.statusCode + " while performing " + request.method + " " + request.url);
+
+    var json;
+
+    try {
+      json = JSON.parse(body.toString('utf8'));
+    } catch(e) {
+      this.error("Unknown error, body not parseable. String body is below:");
+      this.error(body.toString('utf8'));
+    }
+    
+    this.error(json.error || ("JSON body contained no errors: " + JSON.stringify(json)));
+  };
+};
+
 Retry.prototype.error = function (err) {
+  if(err instanceof Error) {
+    err = err.message;
+  }
   console.error(err);
-  // TODO: write to a central error log
 };
 
 Retry.prototype.log = function (log) {
-  console.log(log);
-  // TODO: write to a central log file
+  debug(log);
 };
 
 // Exponential backoff

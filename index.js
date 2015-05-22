@@ -11,7 +11,7 @@ app.use(bodyParser.raw({
 }));
 
 app.use(function (req, res, next) {
-  console.log(req.method + " " + req.originalUrl);
+  console.log("INCOMING " + req.method + " " + req.originalUrl);
   next();
 });
 

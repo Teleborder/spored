@@ -3,8 +3,7 @@ var Datastore = require('nedb'),
     buffer = new Datastore({ filename: config.bufferPath, autoload: true });
 
 exports.store = function (method, url, headers, body, callback) {
-  console.log("storing request " + method + " " + url);
-  console.log("Body", body);
+  debug("storing request " + method + " " + url);
 
   var request = {
     method: method,
@@ -18,12 +17,15 @@ exports.store = function (method, url, headers, body, callback) {
 };
 
 exports.remove = function (id, callback) {
+  debug("Removing buffered request " + id);
   buffer.remove({
     _id: id
   }, callback);
 };
 
 exports.retrieveNext = function (callback) {
+  debug("Getting next buffered request");
+
   buffer.find({}).sort({ createdAt: 1 }).limit(1).exec(function (err, docs) {
     if(err) return callback(err);
     if(!docs[0]) return callback();

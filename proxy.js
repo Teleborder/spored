@@ -43,6 +43,8 @@ function sendRequestImmediate(req, callback) {
     headers.via += ", " + config.proxyName;
   }
 
+  debug("OUTGOING " + req.method + " " + fullUrl(req.originalUrl));
+
   request({
     url: fullUrl(req.originalUrl),
     method: req.method,

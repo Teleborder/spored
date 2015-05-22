@@ -82,11 +82,9 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
 };
 
 function respondAsync(res) {
-  debug("starting queue");
-
   retry.now();
 
-  debug("notifying client");
+  debug("notifying client of async request");
 
   res.sendStatus(202);
 }

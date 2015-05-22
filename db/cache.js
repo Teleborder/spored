@@ -53,6 +53,8 @@ exports.store = function (url, response, body, maxAge, callback) {
 };
 
 exports.prune = function (callback) {
+  debug("Pruning cache");
+
   cache.remove({
     expires: {
       $lt: new Date()
