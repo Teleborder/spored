@@ -41,10 +41,10 @@ exports.sendRequestImmediate = function (req, callback) {
     headers.via += ", " + this.spored.config.proxyName;
   }
 
-  debug("OUTGOING " + req.method + " " + fullUrl(req.originalUrl));
+  debug("OUTGOING " + req.method + " " + this.fullUrl(req.originalUrl));
 
   request({
-    url: fullUrl(req.originalUrl),
+    url: this.fullUrl(req.originalUrl),
     method: req.method,
     body: Buffer.isBuffer(req.body) ? req.body : undefined,
     encoding: null,
@@ -146,6 +146,10 @@ exports.maxAge = function (headers) {
   return 0;
 };
 
+exports.fullUrl = function (url) {
+  return this.spored.config.host + url;
+};
+
 function headerHasValue(headers, name, value) {
   var values = headerValues(headers, name);
 
@@ -163,10 +167,6 @@ function headerValues(headers, name) {
   }).filter(function (val) {
     return !!val;
   });
-}
-
-function fullUrl(url) {
-  return config.host + url;
 }
 
 function singularize(word) {
