@@ -1,10 +1,11 @@
-var buffer = require('./db/buffer'),
-    proxy = require('./proxy');
+var debug = require('./debug');
 
 module.exports = Retry;
 
-function Retry() {
+function Retry(proxy, buffer) {
   this.queue = [];
+  this.proxy = proxy;
+  this.buffer = buffer;
 }
 
 Retry.prototype.now = function (callback) {
@@ -69,7 +70,7 @@ Retry.prototype.retry = function () {
 Retry.prototype.next = function () {
   var self = this;
 
-  buffer.retrieveNext(function (err, request, body) {
+  this.buffer.retrieveNext(function (err, request, body) {
     if(err) return self.error(err);
     if(!request) {
       self.log("No requests found to retry");
@@ -79,7 +80,7 @@ Retry.prototype.next = function () {
 
     self.log("Found " + [request.method, request.url].join(" ") + "(id: " + request._id + ") to retry");
 
-    proxy.sendRequestImmediate({
+    self.proxy.sendRequestImmediate({
       originalUrl: request.url,
       method: request.method,
       body: body,
@@ -103,7 +104,7 @@ Retry.prototype._handleResponse = function (request) {
 
     self.log("Removing " + request.method + " " + request.url + " from the buffer");
 
-    buffer.remove(request._id, function (err) {
+    self.buffer.remove(request._id, function (err) {
       if(err) return self.error(err);
 
       self.next();
@@ -125,7 +126,7 @@ Retry.prototype._responseError = function (request, response) {
     }
     
     this.error(json.error || ("JSON body contained no errors: " + JSON.stringify(json)));
-  };
+  }
 };
 
 Retry.prototype.error = function (err) {
@@ -148,8 +149,3 @@ function expBackoff(retries) {
 
   return Math.min(spread * initial * Math.pow(base, retries));
 }
-
-var retry = new Retry();
-
-Retry.retry = retry;
-Retry.start = retry.start.bind(retry);

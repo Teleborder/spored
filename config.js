@@ -27,6 +27,5 @@ exports.cachePath = resolvePath(exports.proxyPath, 'cache.db');
 exports.port = config.proxy.port || 8380;
 exports.host = config.host || "http://spore.dev:3000";
 exports.name = config.proxy.name || [pkg.name, pkg.version].join(" ");
-exports.errorLog = config.proxy.errorFile || resolvePath(home, '~/.spore/spored/errors.log');
-exports.log = config.proxy.logFile || resolvePath(home, '~/.spore/spored/log.log');
+exports.pruneTime = config.proxy.prune || 3600;
 

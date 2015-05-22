@@ -1,8 +1,6 @@
-var config = require('./config'),
-    debug = require('./debug'),
+var debug = require('./debug'),
     request = require('request'),
-    parseBody = require('qs').parse,
-    retry = require('./retry').retry;
+    parseBody = require('qs').parse;
 
 exports.passThrough = passThrough;
 function passThrough (req, res, next) {
@@ -18,14 +16,14 @@ function sendResponse(res, response, body) {
   res.set(response.headers);
 
   // Add our proxy info
-  res.append('Via', config.proxyName);
+  res.append('Via', this.spored.config.proxyName);
 
   res.status(response.statusCode).send(body);
 }
 
 exports.sendRequest = sendRequest;
 function sendRequest(req, callback) {
-  retry.now(function (err) {
+  this.retry.now(function (err) {
     if(err) return callback(err);
 
     sendRequestImmediate(req, callback);
@@ -38,9 +36,9 @@ function sendRequestImmediate(req, callback) {
 
   // Add our proxy info
   if(!headers.via) {
-    headers.via = config.proxyName;
+    headers.via = this.spored.config.proxyName;
   } else {
-    headers.via += ", " + config.proxyName;
+    headers.via += ", " + this.spored.config.proxyName;
   }
 
   debug("OUTGOING " + req.method + " " + fullUrl(req.originalUrl));

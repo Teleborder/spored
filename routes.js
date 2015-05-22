@@ -1,10 +1,8 @@
-var cache = require('./db/cache'),
-    buffer = require('./db/buffer'),
-    proxy = require('./proxy'),
-    retry = require('./retry').retry,
-    debug = require('./debug');
+var debug = require('./debug');
 
 exports.get = function (req, res, next) {
+  var cache = this.spored.cache,
+      proxy = this.spored.proxy;
 
   debug("get handler for request " + req.originalUrl);
 
@@ -18,7 +16,6 @@ exports.get = function (req, res, next) {
     if(err) return next(err);
     if(response) {
       debug("Cached copy of of " + req.originalUrl + " found, sending.");
-      console.log("Body", body.toString());
       return proxy.sendResponse(res, response, body);
     }
 
@@ -49,6 +46,11 @@ exports.get = function (req, res, next) {
 };
 
 exports.post = exports.put = exports.patch = exports.delete = function (req, res, next) {
+  var cache = this.spored.cache,
+      buffer = this.spored.buffer,
+      proxy = this.spored.proxy,
+      respondAsync = this.respondAsync;
+
   debug(req.method + " handler for " + req.originalUrl);
 
   if(proxy.noBuffer(req.headers)) {
@@ -81,10 +83,10 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
   });
 };
 
-function respondAsync(res) {
-  retry.now();
+exports.respondAsync = function (res) {
+  this.retry.now();
 
   debug("notifying client of async request");
 
-  res.sendStatus(202);
+  res.sendStatus(202); 
 }

@@ -1,36 +1,81 @@
 var express = require('express'),
-    app = express(),
-    config = require('./config'),
+    Datastore = require('nedb'),
+    merge = require('merge'),
+    defaultConfig = require('./config'),
+    debug = require('./debug'),
     bodyParser = require('body-parser'),
     routes = require('./routes'),
-    retry = require('./retry'),
-    prune = require('./prune');
+    Retry = require('./retry'),
+    cache = require('./db/cache'),
+    buffer = require('./db/buffer'),
+    prune = require('./prune'),
+    proxy = require('./proxy');
 
-app.use(bodyParser.raw({
-  type: '*/*'
-}));
+module.exports = Spored;
 
-app.use(function (req, res, next) {
-  console.log("INCOMING " + req.method + " " + req.originalUrl);
-  next();
-});
+function Spored(config) {
+  this.config = merge(config || {}, defaultConfig);
 
-app.get('*', routes.get);
-app.post('*', routes.post);
-app.put('*', routes.put);
-app.patch('*', routes.patch);
-app.delete('*', routes.delete);
+  this.app = express();
 
-app.use(function (req, res, next) {
-  res.sendStatus(404);
-});
+  this.setupRoutes();
+  this.setupDatabases();
+  this.setupProxy();
 
-var server = app.listen(config.port, function () {
-  var host = server.address().address;
-  var port = server.address().port;
+  this.retry = new Retry(this.proxy, this.buffer);
+}
 
-  console.log('spored listening at http://%s:%s', host, port);
-});
+Spored.prototype.setupRoutes = function () {
+  this.app.use(bodyParser.raw({
+    type: '*/*'
+  }));
 
-retry.start();
-prune(60);
+  this.app.use(function (req, res, next) {
+    debug("INCOMING " + req.method + " " + req.originalUrl);
+    next();
+  });
+
+  this.routes = routes;
+  this.routes.spored = this;
+
+  this.app.get('*', this.routes.get.bind(this.routes));
+  this.app.post('*', this.routes.post.bind(this.routes));
+  this.app.put('*', this.routes.put.bind(this.routes));
+  this.app.patch('*', this.routes.patch.bind(this.routes));
+  this.app.delete('*', this.routes.delete.bind(this.routes));
+
+  this.app.use(function (req, res, next) {
+    res.sendStatus(404);
+  });
+};
+
+Spored.prototype.setupDatabases = function () {
+  this.cache = cache;
+  this.cache.db = new Datastore({ filename: this.config.cachePath, autoload: true });
+
+  this.buffer = buffer;
+  this.buffer.db = new Datastore({ filename: this.config.bufferPath, autoload: true });
+};
+
+Spored.prototype.setupProxy = function () {
+  this.proxy = proxy;
+  this.proxy.spored = this;
+};
+
+Spored.prototype.run = function () {
+  var server = this.server = this.app.listen(this.config.port, function () {
+    var host = server.address().address;
+    var port = server.address().port;
+
+    debug('spored listening at http://%s:%s', host, port);
+  });
+
+  this.retry.start();
+  prune(this.config.pruneTime);
+
+  return this;
+};
+
+
+
+

@@ -1,10 +1,7 @@
-var Datastore = require('nedb'),
-    config = require('../config'),
-    debug = require('../debug'),
-    cache = new Datastore({ filename: config.cachePath, autoload: true });
+var debug = require('../debug');
 
 exports.find = function (url, callback) {
-  cache.find({
+  this.db.find({
     method: 'GET',
     url: url,
     expires: {
@@ -49,13 +46,13 @@ exports.store = function (url, response, body, maxAge, callback) {
     return;
   }
 
-  cache.insert(request, callback);
+  this.db.insert(request, callback);
 };
 
 exports.prune = function (callback) {
   debug("Pruning cache");
 
-  cache.remove({
+  this.db.remove({
     expires: {
       $lt: new Date()
     }

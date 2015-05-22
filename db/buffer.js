@@ -1,6 +1,4 @@
-var Datastore = require('nedb'),
-    config = require('../config'),
-    buffer = new Datastore({ filename: config.bufferPath, autoload: true });
+var debug = require('../debug');
 
 exports.store = function (method, url, headers, body, callback) {
   debug("storing request " + method + " " + url);
@@ -13,12 +11,12 @@ exports.store = function (method, url, headers, body, callback) {
     createdAt: new Date()
   };
 
-  buffer.insert(request, callback);
+  this.db.insert(request, callback);
 };
 
 exports.remove = function (id, callback) {
   debug("Removing buffered request " + id);
-  buffer.remove({
+  this.db.remove({
     _id: id
   }, callback);
 };
@@ -26,7 +24,7 @@ exports.remove = function (id, callback) {
 exports.retrieveNext = function (callback) {
   debug("Getting next buffered request");
 
-  buffer.find({}).sort({ createdAt: 1 }).limit(1).exec(function (err, docs) {
+  this.db.find({}).sort({ createdAt: 1 }).limit(1).exec(function (err, docs) {
     if(err) return callback(err);
     if(!docs[0]) return callback();
 
