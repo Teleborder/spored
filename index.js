@@ -44,8 +44,31 @@ Spored.prototype.setupRoutes = function () {
   this.app.patch('*', this.routes.patch.bind(this.routes));
   this.app.delete('*', this.routes.delete.bind(this.routes));
 
-  this.app.use(function (req, res, next) {
-    res.sendStatus(404);
+
+  // catch 404 and forwarding to error handler
+  this.app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+  });
+
+  // error handlers
+  this.app.use(function(err, req, res, next) {
+    console.error(err);
+    console.error(err.stack);
+
+    if(err.status) {
+      res.status(err.status);
+    } else {
+      res.status(500);
+    }
+
+    res.json({
+      error: {
+        message: err.message,
+        code: err.code
+      }
+    });
   });
 };
 
