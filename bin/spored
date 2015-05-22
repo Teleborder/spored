@@ -14,5 +14,11 @@ program
   .option('-P, --prune <seconds>', "Time between prunes of the cached requests database")
   .parse(process.argv);
 
-var spored = new Spored({ port: program.port, host: program.host, name: program.name, pruneTime: program.prune });
+var spored = new Spored({
+  port: program.port,
+  host: program.host,
+  name: program.name,
+  pruneTime: program.prune
+});
+
 spored.run();

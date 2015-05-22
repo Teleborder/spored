@@ -26,16 +26,16 @@ function Spored(config) {
 }
 
 Spored.prototype.setupRoutes = function () {
-  this.app.use(bodyParser.raw({
-    type: '*/*'
-  }));
-
   this.app.use(function (req, res, next) {
     debug("INCOMING " + req.method + " " + req.originalUrl);
     next();
   });
 
-  this.routes = routes;
+  this.app.use(bodyParser.raw({
+    type: '*/*'
+  }));
+
+  this.routes = merge(true, routes);
   this.routes.spored = this;
 
   this.app.get('*', this.routes.get.bind(this.routes));
@@ -50,15 +50,15 @@ Spored.prototype.setupRoutes = function () {
 };
 
 Spored.prototype.setupDatabases = function () {
-  this.cache = cache;
+  this.cache = merge(true, cache);
   this.cache.db = new Datastore({ filename: this.config.cachePath, autoload: true });
 
-  this.buffer = buffer;
+  this.buffer = merge(true, buffer);
   this.buffer.db = new Datastore({ filename: this.config.bufferPath, autoload: true });
 };
 
 Spored.prototype.setupProxy = function () {
-  this.proxy = proxy;
+  this.proxy = merge(true, proxy);
   this.proxy.spored = this;
 };
 

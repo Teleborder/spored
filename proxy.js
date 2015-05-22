@@ -2,36 +2,36 @@ var debug = require('./debug'),
     request = require('request'),
     parseBody = require('qs').parse;
 
-exports.passThrough = passThrough;
-function passThrough (req, res, next) {
-  sendRequest(req, function (err, response, body) {
+exports.passThrough = function (req, res, next) {
+  var self = this;
+
+  this.sendRequest(req, function (err, response, body) {
     if(err) return next(err);
 
-    sendResponse(res, response, body);
+    self.sendResponse(res, response, body);
   });
-}
+};
 
-exports.sendResponse = sendResponse;
-function sendResponse(res, response, body) {
+exports.sendResponse = function (res, response, body) {
   res.set(response.headers);
 
   // Add our proxy info
   res.append('Via', this.spored.config.proxyName);
 
   res.status(response.statusCode).send(body);
-}
+};
 
-exports.sendRequest = sendRequest;
-function sendRequest(req, callback) {
-  this.retry.now(function (err) {
+exports.sendRequest = function (req, callback) {
+  var self = this;
+
+  this.spored.retry.now(function (err) {
     if(err) return callback(err);
 
-    sendRequestImmediate(req, callback);
+    self.sendRequestImmediate(req, callback);
   });
-}
+};
 
-exports.sendRequestImmediate = sendRequestImmediate;
-function sendRequestImmediate(req, callback) {
+exports.sendRequestImmediate = function (req, callback) {
   var headers = req.headers;
 
   // Add our proxy info
@@ -54,12 +54,11 @@ function sendRequestImmediate(req, callback) {
 
     callback(null, response, body);
   });
-}
+};
 
 // check whether a request should be cached as a GET request,
 // and get the contents of a fake GET request
-exports.postCache = postCache;
-function postCache(req) {
+exports.postCache = function (req) {
   var body,
       url,
       type,
@@ -107,20 +106,17 @@ function postCache(req) {
       Connection: 'keep-alive'
     }
   };
-}
+};
 
-exports.noCache = noCache;
-function noCache(headers) {
+exports.noCache = function (headers) {
   return headerHasValue(headers, 'pragma', 'no-cache') || headerHasValue(headers, 'cache-control', 'no-cache');
-}
+};
 
-exports.noBuffer = noBuffer;
-function noBuffer(headers) {
+exports.noBuffer = function (headers) {
   return !headerHasValue(headers, 'prefer', 'respond-async');
-}
+};
 
-exports.maxAge = maxAge;
-function maxAge(headers) {
+exports.maxAge = function (headers) {
   if(!headers) {
     debug("No headers given, returning maximum maxAge of 1 year");
     return 31536000;
@@ -148,7 +144,7 @@ function maxAge(headers) {
 
   debug("No maxAge directive found in headers, setting maxAge to zero");
   return 0;
-}
+};
 
 function headerHasValue(headers, name, value) {
   var values = headerValues(headers, name);

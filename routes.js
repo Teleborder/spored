@@ -84,9 +84,9 @@ exports.post = exports.put = exports.patch = exports.delete = function (req, res
 };
 
 exports.respondAsync = function (res) {
-  this.retry.now();
+  this.spored.retry.now();
 
   debug("notifying client of async request");
 
   res.sendStatus(202); 
-}
+};
