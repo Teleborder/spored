@@ -23,6 +23,7 @@ function Spored(config) {
   this.setupProxy();
 
   this.retry = new Retry(this.proxy, this.buffer);
+  this.prune = prune;
 }
 
 Spored.prototype.setupRoutes = function () {
@@ -94,7 +95,7 @@ Spored.prototype.run = function () {
   });
 
   this.retry.start();
-  prune(this.config.pruneTime);
+  this.prune(this.config.pruneTime);
 
   return this;
 };
