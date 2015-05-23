@@ -100,7 +100,7 @@ Retry.prototype._handleResponse = function (request) {
 
     self.log(request.method + " " + request.url + " completed with status code " + response.statusCode);
 
-    self._responseError(request, response);
+    self._responseError(request, response, body);
 
     self.log("Removing " + request.method + " " + request.url + " from the buffer");
 
@@ -112,7 +112,7 @@ Retry.prototype._handleResponse = function (request) {
   };
 };
 
-Retry.prototype._responseError = function (request, response) {
+Retry.prototype._responseError = function (request, response, body) {
   if([200, 201, 204].indexOf(response.statusCode) === -1) {
     this.error("Status code " + response.statusCode + " while performing " + request.method + " " + request.url);
 
