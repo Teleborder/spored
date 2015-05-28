@@ -1,6 +1,8 @@
 var mustache = require('mustache'),
     os = require('os'),
     fs = require('fs'),
+    path = require('path'),
+    which = require('which'),
     childProc = require('child_process'),
     resolvePath = require('../utils/resolve_path'),
     launchAgentsPath = resolvePath('~/Library/LaunchAgents'),
@@ -15,7 +17,8 @@ module.exports = function (npmBin, sporedHome) {
     throw new Error("spored requires OS X 10.9 or later.");
   }
 
-  var plist = mustache.render(plistTemplate, { NPM_BIN: npmBin, SPORED_HOME: sporedHome}),
+  var nodeBin = path.dirname(which.sync('node')),
+      plist = mustache.render(plistTemplate, { NPM_BIN: npmBin, NODE_BIN: nodeBin, SPORED_HOME: sporedHome}),
       plistPath = resolvePath(launchAgentsPath, 'sh.spore.spored.plist');
 
   fs.writeFileSync(plistPath, plist);

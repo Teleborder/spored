@@ -1,6 +1,6 @@
 {
   "name": "spored",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "",
   "main": "index.js",
   "bin": {
@@ -23,7 +23,8 @@
     "nedb": "^1.1.2",
     "npm": "^2.10.1",
     "qs": "^2.4.2",
-    "request": "^2.55.0"
+    "request": "^2.55.0",
+    "which": "^1.1.1"
   },
   "engines": {
     "node": ">=0.11.12"
