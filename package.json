@@ -1,13 +1,14 @@
 {
   "name": "spored",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "bin": {
     "spored": "bin/spored"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node scripts/postinstall.js"
   },
   "author": "",
   "license": "MIT",
@@ -18,8 +19,13 @@
     "express": "^4.12.4",
     "fs-extra": "^0.18.3",
     "merge": "^1.2.0",
+    "mustache": "^2.0.0",
     "nedb": "^1.1.2",
+    "npm": "^2.10.1",
     "qs": "^2.4.2",
     "request": "^2.55.0"
+  },
+  "engines": {
+    "node": ">=0.11.12"
   }
 }
