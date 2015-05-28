@@ -16,7 +16,7 @@ try {
 }
 
 config = config || {};
-config.spored = config.proxy || {};
+config.proxy = config.proxy || {};
 
 exports.proxyPath = resolvePath(config.proxy.home || home + '/spored');
 
