@@ -3,7 +3,7 @@ var os = require('os'),
     osx = require('./osx-uninstall.js');
 
 if(os.platform() === 'darwin') {
-  return osx(npmBin, config.proxyPath);
+  return osx();
 }
 
 console.log("IMPORTANT UNINSTALLATION INFORMATION");
