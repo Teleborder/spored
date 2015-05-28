@@ -17,7 +17,7 @@ exports.sendResponse = function (res, response, body) {
   res.set(response.headers);
 
   // Add our proxy info
-  res.append('Via', this.spored.config.proxyName);
+  res.append('Via', this.spored.config.proxy.name);
 
   res.status(response.statusCode).send(body);
 };
@@ -37,9 +37,9 @@ exports.sendRequestImmediate = function (req, callback) {
 
   // Add our proxy info
   if(!headers.via) {
-    headers.via = this.spored.config.proxyName;
+    headers.via = this.spored.config.proxy.name;
   } else {
-    headers.via += ", " + this.spored.config.proxyName;
+    headers.via += ", " + this.spored.config.proxy.name;
   }
 
   // replace local host with the real host
