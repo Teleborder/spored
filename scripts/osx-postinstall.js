@@ -8,6 +8,8 @@ var mustache = require('mustache'),
     majorVersion = parseInt(os.release().split('.')[0], 10);
 
 module.exports = function (npmBin, sporedHome) {
+  console.log("OS X detected, registering spored with launchd");
+
   // see http://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history for mappings
   if(majorVersion < 13) {
     throw new Error("spored requires OS X 10.9 or later.");
@@ -18,17 +20,17 @@ module.exports = function (npmBin, sporedHome) {
 
   fs.writeFileSync(plistPath, plist);
 
-  // if(majorVersion >= 14) {
-  //   try {
-  //     childProc.execSync("launchctl bootstrap gui/" + process.getuid() + " " + plistPath);
-  //   } catch(e) {
-  //     // this errors if it's already bootstrapped. Since `unbootstrap` is not yet implemented,
-  //     // we'll just ignore this
-  //   }
-  //   childProc.execSync("launchctl enable gui/" + process.getuid() + "/sh.spore.spored");
-  //   childProc.execSync("launchctl kickstart -k gui/" + process.getuid() + "/sh.spore.spored");
-  // } else {
+  if(majorVersion >= 14) {
+    try {
+      childProc.execSync("launchctl bootstrap gui/" + process.getuid() + " " + plistPath);
+    } catch(e) {
+      // this errors if it's already bootstrapped. Since `unbootstrap` is not yet implemented,
+      // we'll just ignore this
+    }
+    childProc.execSync("launchctl enable gui/" + process.getuid() + "/sh.spore.spored");
+    childProc.execSync("launchctl kickstart -k gui/" + process.getuid() + "/sh.spore.spored");
+  } else {
     childProc.execSync("launchctl unload " + plistPath);
     childProc.execSync("launchctl load -Fw " + plistPath);
-  // }
+  }
 };
