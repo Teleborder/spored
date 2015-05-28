@@ -1,5 +1,6 @@
 var debug = require('./debug'),
     request = require('request'),
+    urlParse = require('url').parse,
     parseBody = require('qs').parse;
 
 exports.passThrough = function (req, res, next) {
@@ -42,7 +43,7 @@ exports.sendRequestImmediate = function (req, callback) {
   }
 
   // replace local host with the real host
-  headers.host = this.spored.config.host;
+  headers.host = urlParse(this.spored.config.host).host;
 
   debug("OUTGOING " + req.method + " " + this.fullUrl(req.originalUrl));
 
