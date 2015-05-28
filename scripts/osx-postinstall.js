@@ -30,7 +30,12 @@ module.exports = function (npmBin, sporedHome) {
     childProc.execSync("launchctl enable gui/" + process.getuid() + "/sh.spore.spored");
     childProc.execSync("launchctl kickstart -k gui/" + process.getuid() + "/sh.spore.spored");
   } else {
-    childProc.execSync("launchctl unload " + plistPath);
+    try {
+      childProc.execSync("launchctl unload " + plistPath);
+    } catch(e) {
+      // this errors if it hasn't ever been loaded.
+      // That must mean this is our first time, so we'll ignore
+    }
     childProc.execSync("launchctl load -Fw " + plistPath);
   }
 };
