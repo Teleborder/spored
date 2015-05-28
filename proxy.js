@@ -41,6 +41,9 @@ exports.sendRequestImmediate = function (req, callback) {
     headers.via += ", " + this.spored.config.proxyName;
   }
 
+  // replace local host with the real host
+  headers.host = this.spored.config.host;
+
   debug("OUTGOING " + req.method + " " + this.fullUrl(req.originalUrl));
 
   request({
