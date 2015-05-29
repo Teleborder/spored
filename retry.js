@@ -6,6 +6,8 @@ function Retry(proxy, buffer) {
   this.queue = [];
   this.proxy = proxy;
   this.buffer = buffer;
+  this.timer = null;
+  this.execing = false;
 }
 
 Retry.prototype.now = function (callback) {
@@ -15,12 +17,9 @@ Retry.prototype.now = function (callback) {
     this.queue.push(callback);
   }
 
-  if(this.timer) {
-    clearTimeout(this.timer);
-    this.timer = null;
+  if(!this.execing) {
+    this.next();
   }
-
-  this.next();
 };
 
 Retry.prototype.done = function () {
@@ -29,6 +28,7 @@ Retry.prototype.done = function () {
   if(this.timer) {
     clearTimeout(this.timer);
   }
+  this.execing = false;
   this.timer = null;
   this.retries = 0;
   this.finishQueue();
@@ -51,6 +51,7 @@ Retry.prototype.start = function () {
 };
 
 Retry.prototype.backoff = function (err) {
+  this.execing = false;
   this.timer = setTimeout(this.retry.bind(this), expBackoff(this.retries) * 1000);
 
   if(err) {
@@ -69,6 +70,8 @@ Retry.prototype.retry = function () {
 
 Retry.prototype.next = function () {
   var self = this;
+
+  this.execing = true;
 
   this.buffer.retrieveNext(function (err, request, body) {
     if(err) return self.error(err);
