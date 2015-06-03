@@ -1,7 +1,7 @@
 {
   "name": "spored",
   "version": "0.4.4",
-  "description": "",
+  "description": "Local proxy for spore",
   "main": "index.js",
   "bin": {
     "spored": "bin/spored"
@@ -12,6 +12,14 @@
     "postuninstall": "node scripts/uninstall.js"
   },
   "author": "Trey Griffith <trey@tgriff3.com>",
+  "homepage": "https://github.com/spore-sh/spored",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/spore-sh/spored.git"
+  },
+  "bugs": {
+    "url": "https://github.com/spore-sh/spored/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.12.4",
