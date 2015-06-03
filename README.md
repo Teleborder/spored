@@ -1,7 +1,7 @@
 spored
 ------
 
-`spored` is the Spore Daemon, a small proxy server that runs locally on your machine in tandem with the [`spore-cli`](https://github.com/spore-cli-node) to boost performance and allow for offline capability.
+`spored` is the Spore Daemon, a small proxy server that runs locally on your machine in tandem with the [`spore-cli`](https://github.com/spore-sh/spore-cli-node) to boost performance and allow for offline capability.
 
 
 ### Installation
